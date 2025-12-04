@@ -13,7 +13,7 @@ public class Principal {
         a.agregarEstado(q2);
 
         // Alfabeto
-        a.agregarSimbolo('a');
+        a.agregarSimbolo('c');
         a.agregarSimbolo('d');
 
         // Inicial
