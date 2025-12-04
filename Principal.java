@@ -14,7 +14,7 @@ public class Principal {
 
         // Alfabeto
         a.agregarSimbolo('a');
-        a.agregarSimbolo('b');
+        a.agregarSimbolo('d');
 
         // Inicial
         a.agregarInicial(q0);
