@@ -30,7 +30,7 @@ public class Principal {
         a.agregarTransicion(q2, 'a', q2);
         a.agregarTransicion(q2, 'b', q0);
 
-        // Imprimir la tabulación
+        // Imprimir la tabulacion
         for (Transicion t : a.transiciones) {
             System.out.println(t);
         }
