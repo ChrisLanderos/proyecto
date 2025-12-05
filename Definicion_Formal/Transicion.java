@@ -1,8 +1,8 @@
 package Definicion_Formal;
 public class Transicion {
-    Estado desde;
-    char simbolo;
-    Estado hacia;
+    public Estado desde;
+    public char simbolo;
+    public Estado hacia;
 
     public Transicion(Estado desde, char simbolo, Estado hacia) {
         this.desde = desde;

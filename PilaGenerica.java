@@ -1,5 +1,5 @@
 public class PilaGenerica <T extends Object>{
-    private NodoP inicio, fin;
+    private NodoP<T> inicio, fin;
     private int tamaño;
     
     /**
@@ -7,15 +7,15 @@ public class PilaGenerica <T extends Object>{
      * @param valor Valor a insertar en la cima.
      */
     public void push(T valor) {
-        push(new NodoP(valor));
+        push(new NodoP<T>(valor));
     }
 
-    public void push(NodoP nodo) {
+    public void push(NodoP<T> nodo) {
         if (inicio == null) {
             inicio = fin = nodo;
             tamaño = 1;
         } else {
-            NodoP nuevo = nodo;
+            NodoP<T> nuevo = nodo;
             fin.der = nuevo;
             nuevo.izq = fin;
             fin = nuevo;
@@ -27,21 +27,44 @@ public class PilaGenerica <T extends Object>{
      * Elimina un elemento de la cima de la pila.
      * @return Valor eliminado.
      */
-    public NodoP pop() {
-        NodoP borrado = null;
+    public T pop() {
         if (inicio != null) {
+            NodoP<T> borrado = null;
             if (size() == 1) {
                 borrado = fin;
                 fin = inicio = null;
                 tamaño = 0;
-            }else{
+            } else {
                 borrado = fin;
                 fin = fin.izq;
                 fin.der = borrado.izq = null;
                 tamaño--;
             }
+            return (borrado != null) ? borrado.dato : null;
         }
-        return borrado;
+        return null;
+    }
+
+    /**
+     * Elimina un nodo de la cima de la pila.
+     * @return Nodo eliminado.
+     */
+    public NodoP<T> popNodo() {
+        if (inicio != null) {
+            NodoP<T> borrado = null;
+            if (size() == 1) {
+                borrado = fin;
+                fin = inicio = null;
+                tamaño = 0;
+            } else {
+                borrado = fin;
+                fin = fin.izq;
+                fin.der = borrado.izq = null;
+                tamaño--;
+            }
+            return borrado;
+        }
+        return null;
     }
 
     /**
@@ -49,7 +72,7 @@ public class PilaGenerica <T extends Object>{
      * @return True si está vacía, false si no.
      */
     public boolean isempty() {
-        return (size() == 0)? true : false;
+        return (size() == 0);
     }
 
     /**
@@ -65,11 +88,10 @@ public class PilaGenerica <T extends Object>{
      * @return Dato en la cima
      */
     public T peek() {
-        NodoP x;
         if (!isempty()) {
-            x = pop();
-            push(x);
-            return (T) x.dato;
+            T dato = pop();      
+            push(dato);          
+            return dato;
         }
         return null;
     }
@@ -77,7 +99,7 @@ public class PilaGenerica <T extends Object>{
     @Override
     public String toString() {
         String cadena = "Pila(" + size() + "): {";
-        NodoP cursor = inicio;
+        NodoP<T> cursor = inicio;
         while (cursor != null) {
             cadena += cursor;
             cursor = cursor.der;
@@ -86,8 +108,8 @@ public class PilaGenerica <T extends Object>{
     }
     
     public class NodoP <T> {
-        private T dato;
-        public NodoP izq, der;
+        public T dato;
+        public NodoP<T> izq, der;
 
         public NodoP(T dato) {
             this.dato = dato;

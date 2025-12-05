@@ -45,4 +45,8 @@ public class Automata {
     public ArrayList<Estado> getFinales() {
         return finales;
     }
+
+    public ArrayList<Character> getAlfabeto() {
+        return alfabeto;
+    }
 }

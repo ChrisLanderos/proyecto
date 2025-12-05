@@ -37,5 +37,8 @@ public class Principal {
         for (Transicion t : a.getTransiciones()) {
             System.out.println(t);
         }
+
+        Minimizacion minimizador = new Minimizacion(a);  //Le pasamos el automata al minimizador
+        minimizador.CompatibilidadEstados();
     }
 }
