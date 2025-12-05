@@ -37,4 +37,12 @@ public class Automata {
     public ArrayList<Transicion> getTransiciones() {
         return transiciones;
     }
+
+    public ArrayList<Estado> getEstados() {
+        return estados;
+    }
+
+    public ArrayList<Estado> getFinales() {
+        return finales;
+    }
 }
