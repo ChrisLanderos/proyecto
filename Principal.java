@@ -1,3 +1,6 @@
+import Definicion_Formal.Automata;
+import Definicion_Formal.Estado;
+import Definicion_Formal.Transicion;
 public class Principal {
     public static void main(String[] args) {
 
@@ -31,7 +34,7 @@ public class Principal {
         a.agregarTransicion(q2, 'b', q0);
 
         // Imprimir la tabulacion
-        for (Transicion t : a.transiciones) {
+        for (Transicion t : a.getTransiciones()) {
             System.out.println(t);
         }
     }

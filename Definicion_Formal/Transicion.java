@@ -1,3 +1,4 @@
+package Definicion_Formal;
 public class Transicion {
     Estado desde;
     char simbolo;

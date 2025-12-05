@@ -1,5 +1,5 @@
+package Definicion_Formal;
 import java.util.ArrayList;
-
 public class Automata {
     ArrayList<Estado> estados;
     ArrayList<Character> alfabeto;
@@ -32,5 +32,9 @@ public class Automata {
 
     public void agregarTransicion(Estado desde, char simbolo, Estado hacia) {
         transiciones.add(new Transicion(desde, simbolo, hacia));
+    }
+
+    public ArrayList<Transicion> getTransiciones() {
+        return transiciones;
     }
 }
