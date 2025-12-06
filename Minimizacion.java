@@ -1,224 +1,181 @@
 import java.util.ArrayList;
-
 import Definicion_Formal.Automata;
 import Definicion_Formal.Estado;
 import Definicion_Formal.Transicion;
+import Listas_Estados.Estados_Compatibles;
+import Listas_Estados.Simbolos_Estado;
+
 public class Minimizacion {
-    ArrayList<Estados_Compatibles>estados_compatibles;
+    private ArrayList<Estados_Compatibles> estados_compatibles;
     private Automata a; 
-    private PilaGenerica<Simbolos_Estado> destinoA;
-    private PilaGenerica<Simbolos_Estado> destinoB;
     private ArrayList<Simbolos_Estado> origen;
+
     public Minimizacion(Automata automata) {
         estados_compatibles = new ArrayList<>();
         this.a = automata;
         this.origen = new ArrayList<>();
-        this.destinoA = new PilaGenerica<>();
-        this.destinoB = new PilaGenerica<>();
     }
 
     public void CompatibilidadEstados() {
         ArrayList<Estado> estados = a.getEstados();
         ArrayList<Estado> finales = a.getFinales();
+
+        // recorrer todos los pares de estados
         for (int i = 0; i < estados.size(); i++) {
             Estado estado1 = estados.get(i);
             boolean esFinal1 = finales.contains(estado1);
-            
+
             for (int j = i + 1; j < estados.size(); j++) {
                 Estado estado2 = estados.get(j);
                 boolean esFinal2 = finales.contains(estado2);
-                
-                if (estado1 != estado2) { // No es el mismo estado
-                    if (esFinal1 == esFinal2) {
-                        // Ambos son finales o ambos no son finales - son compatibles
-                        estados_compatibles.add(new Estados_Compatibles(estado1, estado2, true));
-                    } else {
-                        // Uno es final y el otro no - no son compatibles
-                        estados_compatibles.add(new Estados_Compatibles(estado1, estado2, false));
-                    }
+
+                // si ambos son finales o ambos no finales, se consideran compatibles
+                if (esFinal1 == esFinal2) {
+                    estados_compatibles.add(new Estados_Compatibles(estado1, estado2, true));
                 }
             }
         }
-        imprimirCompatibilidad();
-        Minimizar();
-    }
-    public void imprimirCompatibilidad() {
-        for (Estados_Compatibles estado : estados_compatibles) {
-            System.out.println(estado);
-        }
-    }
 
-    public void verTransicionesDePares() {
-        ArrayList<Character> alfabeto = a.getAlfabeto();
-
-        for (Estados_Compatibles par : estados_compatibles) {
-            Estado e1 = par.getm1();
-            Estado e2 = par.getm2();
-            
-            System.out.println("\nPar: " + e1 + " - " + e2 + 
-                            " (Compatibles: " + par.isCompatibilidad() + ")");
-            
-            for (char simbolo : alfabeto) {
-                // Buscar transiciones en la lista del autómata
-                Estado destino1 = null;
-                Estado destino2 = null;
-                
-                for (Transicion t : a.getTransiciones()) {
-                    // Transición para e1
-                    if (t.desde == e1 && t.simbolo == simbolo) {
-                        destino1 = t.hacia;
-                    }
-                    // Transición para e2
-                    if (t.desde == e2 && t.simbolo == simbolo) {
-                        destino2 = t.hacia;
-                    }
-                }
-                
-                System.out.println("  Con '" + simbolo + "': " + 
-                                e1 + " → " + (destino1 != null ? destino1 : "null") + " | " +
-                                e2 + " → " + (destino2 != null ? destino2 : "null"));
+        for (Estados_Compatibles par : new ArrayList<>(estados_compatibles)) {
+            // verificar que los estados aun existen en el automata
+            if (!a.getEstados().contains(par.getm1()) || !a.getEstados().contains(par.getm2())) {
+                continue; // saltar este par
             }
-        }
-    }
-    public void Minimizar() {
-        ArrayList<Character> alfabeto = a.getAlfabeto();
-        ArrayList<Estado> finales = a.getFinales();
-        
-        System.out.println("\n=== ALGORITMO DE MINIMIZACIÓN ===");
-        
-        for (Estados_Compatibles par : estados_compatibles) {
-            // Solo procesamos si son compatibles según la lista inicial
+
             if (par.isCompatibilidad()) {
-                boolean sonCompatibles = true;
-                
-                // Verificar transiciones para cada símbolo
-                for (char simbolo : alfabeto) {
-                    Estado destino1 = null;
-                    Estado destino2 = null;
-                    
-                    // Buscar transiciones
-                    for (Transicion t : a.getTransiciones()) {
-                        if (t.desde == par.getm1() && t.simbolo == simbolo) {
-                            destino1 = t.hacia;
-                        }
-                        if (t.desde == par.getm2() && t.simbolo == simbolo) {
-                            destino2 = t.hacia;
-                        }
-                    }
-                    
-                    // VERIFICACIÓN: Si encontramos ambos destinos
-                    if (destino1 != null && destino2 != null) {
-                        // Verificar si uno es final y el otro no
-                        boolean destino1EsFinal = finales.contains(destino1);
-                        boolean destino2EsFinal = finales.contains(destino2);
-                        
-                        if (destino1EsFinal != destino2EsFinal) {
-                            // ✗ NO SON COMPATIBLES - CORTAMOS AQUÍ
-                            System.out.println("✗ " + par.getm1() + " y " + par.getm2() + 
-                                            " NO son compatibles (destinos con '" + simbolo + "')");
-                            sonCompatibles = false;
-                            break; // Salimos del bucle de símbolos
-                        }
-                    }
+                boolean compatibles = imprimirBloqueEnumerado(par);
+                if (compatibles) {
+                    // si son compatibles, eliminar uno y redirigir transiciones
+                    eliminarEstado(par.getm2(), par.getm1());
                 }
-                
-                // Si pasó todas las verificaciones, SÍ son compatibles
-                if (sonCompatibles) {
-                    System.out.println("✓ " + par.getm1() + " y " + par.getm2() + " SON compatibles");
-                    
-                    // Agregar a la lista de origen (estados compatibles)
-                    origen.add(new Simbolos_Estado(par.getm1(), par.getm2()));
-                    
-                    // Solo si son compatibles, procesamos sus transiciones para las pilas
-                    for (char simbolo : alfabeto) {
-                        Estado destino1 = null;
-                        Estado destino2 = null;
-                        
-                        for (Transicion t : a.getTransiciones()) {
-                            if (t.desde == par.getm1() && t.simbolo == simbolo) {
-                                destino1 = t.hacia;
-                            }
-                            if (t.desde == par.getm2() && t.simbolo == simbolo) {
-                                destino2 = t.hacia;
-                            }
-                        }
-                        
-                        // Agregar a las pilas correspondientes
-                        if (destino1 != null && destino2 != null) {
-                            Simbolos_Estado parDestino = new Simbolos_Estado(destino1, destino2);
-                            
-                            if (simbolo == 'a') {
-                                destinoA.push(parDestino);
-                                System.out.println("  Agregado a destinoA: (" + destino1 + ", " + destino2 + ")");
-                            } else if (simbolo == 'b') {
-                                destinoB.push(parDestino);
-                                System.out.println("  Agregado a destinoB: (" + destino1 + ", " + destino2 + ")");
-                            }
-                        }
-                    }
-                }
-                // Si no son compatibles, NO los agregamos a origen NI a las pilas
-                // Simplemente continuamos con el siguiente par
-            } else {
-                // Si ya eran incompatibles desde el inicio, los ignoramos
-                System.out.println("- " + par.getm1() + " y " + par.getm2() + " ya eran incompatibles (saltado)");
             }
         }
-        
-        // Mostrar resultados finales
-        System.out.println("\n=== RESUMEN FINAL ===");
-        System.out.println("Total de pares procesados: " + estados_compatibles.size());
-        System.out.println("Pares compatibles encontrados: " + origen.size());
-        System.out.println("Elementos en pila destinoA: " + destinoA.size());
-        System.out.println("Elementos en pila destinoB: " + destinoB.size());
-        
-        // Mostrar contenido de las pilas
-        mostrarContenidoPilas();
     }
 
-    private void mostrarContenidoPilas() {
-        System.out.println("\n=== CONTENIDO DE LAS PILAS ===");
-        
-        // Mostrar destinoA
-        System.out.println("\nPila destinoA:");
-        if (destinoA.isempty()) {
-            System.out.println("  Vacía");
-        } else {
-            PilaGenerica<Simbolos_Estado> temp = new PilaGenerica<>();
-            int contador = 1;
-            
-            while (!destinoA.isempty()) {
-                Simbolos_Estado par = destinoA.pop();
-                temp.push(par);
-                System.out.println("  " + contador + ". (" + par.getm1() + ", " + par.getm2() + ")");
-                contador++;
+    private boolean imprimirBloqueEnumerado(Estados_Compatibles par) {
+        Estado m1 = par.getm1();
+        Estado m2 = par.getm2();
+        Simbolos_Estado parOrigen = new Simbolos_Estado(m1, m2);
+
+        ArrayList<String> m1m2 = new ArrayList<>();
+        ArrayList<String> trans0 = new ArrayList<>();
+        ArrayList<String> trans1 = new ArrayList<>();
+
+        m1m2.add(m1 + " - " + m2);
+        if (!origen.contains(parOrigen)) {
+            origen.add(parOrigen);
+        }
+
+        boolean compatibleFinal = true;
+        String detalleIncompatibilidad = "";
+
+        // recorrer el alfabeto y ver a donde van los estados con cada simbolo
+        for (char simbolo : a.getAlfabeto()) {
+            Estado destino1 = null;
+            Estado destino2 = null;
+
+            for (Transicion t : a.getTransiciones()) {
+                if (t.desde == m1 && t.simbolo == simbolo) {
+                    destino1 = t.hacia;
+                }
+                if (t.desde == m2 && t.simbolo == simbolo) {
+                    destino2 = t.hacia;
+                }
             }
-            
-            // Restaurar la pila
-            while (!temp.isempty()) {
-                destinoA.push(temp.pop());
+
+            if (destino1 != null && destino2 != null) {
+                boolean d1Final = a.getFinales().contains(destino1);
+                boolean d2Final = a.getFinales().contains(destino2);
+
+                String formato = "";
+                if (destino1 == destino2) {
+                    formato = destino1 + " = " + destino2;
+                } else {
+                    formato = destino1 + " - " + destino2;
+                }
+
+                if (d1Final == d2Final) {
+                    // agregar nuevos pares derivados si no estan ya
+                    if (!m1m2.contains(destino1 + " - " + destino2) && destino1 != destino2) {
+                        m1m2.add(destino1 + " - " + destino2);
+                    }
+                    if (simbolo == '0') {
+                        trans0.add(formato);
+                    }
+                    if (simbolo == '1') {
+                        trans1.add(formato);
+                    }
+                } else {
+                    // si uno es final y el otro no, ya no son compatibles
+                    compatibleFinal = false;
+                    if (d1Final && !d2Final) {
+                        detalleIncompatibilidad = "El estado " + destino1 + " es final y " + destino2 + " no lo es";
+                    } else if (!d1Final && d2Final) {
+                        detalleIncompatibilidad = "El estado " + destino2 + " es final y " + destino1 + " no lo es";
+                    }
+                    if (simbolo == '0') {
+                        trans0.add(formato);
+                    }
+                    if (simbolo == '1') {
+                        trans1.add(formato);
+                    }
+                    break;
+                }
             }
         }
-        
-        // Mostrar destinoB
-        System.out.println("\nPila destinoB:");
-        if (destinoB.isempty()) {
-            System.out.println("  Vacía");
+
+        // impresion de la tabla
+        System.out.println("\nComparando par: " + m1 + " - " + m2);
+
+        System.out.println("\n   M1 - M2");
+        System.out.println("   --------");
+        for (int i = 0; i < m1m2.size(); i++) {
+            System.out.println("   " + (i+1) + ". | " + m1m2.get(i));
+        }
+
+        System.out.println("\n   0");
+        System.out.println("   --------");
+        for (int i = 0; i < trans0.size(); i++) {
+            System.out.println("   " + (i+1) + ". | " + trans0.get(i));
+        }
+
+        System.out.println("\n   1");
+        System.out.println("   --------");
+        for (int i = 0; i < trans1.size(); i++) {
+            System.out.println("   " + (i+1) + ". | " + trans1.get(i));
+        }
+
+        System.out.println("\n--------------------------------------------");
+        if (compatibleFinal) {
+            System.out.println("Resultado final: Compatible");
         } else {
-            PilaGenerica<Simbolos_Estado> temp = new PilaGenerica<>();
-            int contador = 1;
-            
-            while (!destinoB.isempty()) {
-                Simbolos_Estado par = destinoB.pop();
-                temp.push(par);
-                System.out.println("  " + contador + ". (" + par.getm1() + ", " + par.getm2() + ")");
-                contador++;
-            }
-            
-            // Restaurar la pila
-            while (!temp.isempty()) {
-                destinoB.push(temp.pop());
+            System.out.println("Resultado final: Incompatible -> " + detalleIncompatibilidad);
+        }
+        System.out.println("============================================");
+
+        return compatibleFinal;
+    }
+
+    private void eliminarEstado(Estado eliminar, Estado compatible) {
+        ArrayList<Transicion> nuevasTransiciones = new ArrayList<>();
+
+        // redirigir transiciones que iban al estado eliminado
+        for (Transicion t : a.getTransiciones()) {
+            if (t.hacia == eliminar) {
+                nuevasTransiciones.add(new Transicion(t.desde, t.simbolo, compatible));
+            } else if (t.desde != eliminar) {
+                nuevasTransiciones.add(t);
             }
         }
+
+        // actualizar listas del automata
+        a.setTransiciones(nuevasTransiciones);
+        a.getEstados().remove(eliminar);
+        a.getFinales().remove(eliminar);
+
+        // quitar pares que contenian al estado eliminado
+        estados_compatibles.removeIf(p -> p.getm1() == eliminar || p.getm2() == eliminar);
+
+        System.out.println("Estado " + eliminar + " eliminado. Redirigido hacia " + compatible);
     }
 }

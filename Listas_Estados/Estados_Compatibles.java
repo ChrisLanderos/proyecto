@@ -1,3 +1,4 @@
+package Listas_Estados;
 import Definicion_Formal.Estado;
 public class Estados_Compatibles{
     private Estado m1;

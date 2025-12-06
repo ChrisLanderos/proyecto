@@ -26,12 +26,24 @@ public class Automata {
         inicial = e;
     }
 
+    public Estado getInicial() { 
+        return inicial; 
+    }
+    
+    public void setInicial(Estado e) { 
+        this.inicial = e; 
+    }
+
     public void agregarFinal(Estado e) {
         finales.add(e);
     }
 
     public void agregarTransicion(Estado desde, char simbolo, Estado hacia) {
         transiciones.add(new Transicion(desde, simbolo, hacia));
+    }
+
+    public void setTransiciones(ArrayList<Transicion> nuevasTransiciones) {
+        this.transiciones = nuevasTransiciones;
     }
 
     public ArrayList<Transicion> getTransiciones() {

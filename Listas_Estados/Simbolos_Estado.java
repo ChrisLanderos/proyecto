@@ -1,3 +1,4 @@
+package Listas_Estados;
 import Definicion_Formal.Estado;
 public class Simbolos_Estado {
     private Estado m1;
