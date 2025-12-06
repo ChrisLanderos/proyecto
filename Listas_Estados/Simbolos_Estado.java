@@ -18,4 +18,17 @@ public class Simbolos_Estado {
     public String toString() {
         return "Simbolos_Estado [m1=" + m1 + ", m2=" + m2 + "]";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Simbolos_Estado)) return false;
+        Simbolos_Estado other = (Simbolos_Estado) o;
+        return this.getm1().equals(other.getm1()) && this.getm2().equals(other.getm2());
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * getm1().hashCode() + getm2().hashCode();
+    }
 }

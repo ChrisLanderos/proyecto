@@ -1,7 +1,7 @@
 import Definicion_Formal.Automata;
 import Definicion_Formal.Estado;
 import Definicion_Formal.Transicion;
-public class main {
+public class Run {
     public static void main(String[] args) {
 
         Automata a = new Automata();
@@ -82,6 +82,7 @@ public class main {
         System.out.println("Alfabeto: " + a.getAlfabeto());
         System.out.println("Estado Inicial: " + a.getInicial());
         System.out.println("Estados Finales: " + a.getFinales());
+        System.out.println("Transiciones:");
 
         for (Transicion t : a.getTransiciones()) {
             System.out.println(t);
@@ -95,7 +96,7 @@ public class main {
         System.out.println("Alfabeto: " + a.getAlfabeto());
         System.out.println("Estado Inicial: " + a.getInicial());
         System.out.println("Estados Finales: " + a.getFinales());
-
+        System.out.println("Transiciones:");
         for (Transicion t : a.getTransiciones()) {
             System.out.println(t);
         }

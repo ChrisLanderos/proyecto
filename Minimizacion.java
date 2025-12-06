@@ -29,23 +29,22 @@ public class Minimizacion {
                 Estado estado2 = estados.get(j);
                 boolean esFinal2 = finales.contains(estado2);
 
-                // si ambos son finales o ambos no finales, se consideran compatibles
+                // solo comparar pares que sean ambos finales o ambos no finales
                 if (esFinal1 == esFinal2) {
                     estados_compatibles.add(new Estados_Compatibles(estado1, estado2, true));
                 }
             }
         }
 
+        // evaluar cada par
         for (Estados_Compatibles par : new ArrayList<>(estados_compatibles)) {
-            // verificar que los estados aun existen en el automata
             if (!a.getEstados().contains(par.getm1()) || !a.getEstados().contains(par.getm2())) {
-                continue; // saltar este par
+                continue;
             }
 
             if (par.isCompatibilidad()) {
                 boolean compatibles = imprimirBloqueEnumerado(par);
                 if (compatibles) {
-                    // si son compatibles, eliminar uno y redirigir transiciones
                     eliminarEstado(par.getm2(), par.getm1());
                 }
             }
@@ -60,8 +59,10 @@ public class Minimizacion {
         ArrayList<String> m1m2 = new ArrayList<>();
         ArrayList<String> trans0 = new ArrayList<>();
         ArrayList<String> trans1 = new ArrayList<>();
+        ArrayList<Simbolos_Estado> pendientes = new ArrayList<>();
 
         m1m2.add(m1 + " - " + m2);
+        pendientes.add(parOrigen);
         if (!origen.contains(parOrigen)) {
             origen.add(parOrigen);
         }
@@ -69,62 +70,54 @@ public class Minimizacion {
         boolean compatibleFinal = true;
         String detalleIncompatibilidad = "";
 
-        // recorrer el alfabeto y ver a donde van los estados con cada simbolo
-        for (char simbolo : a.getAlfabeto()) {
-            Estado destino1 = null;
-            Estado destino2 = null;
+        // recorrer pares pendientes en cascada
+        while (!pendientes.isEmpty()) {
+            Simbolos_Estado actual = pendientes.remove(0);
+            Estado e1 = actual.getm1();
+            Estado e2 = actual.getm2();
 
-            for (Transicion t : a.getTransiciones()) {
-                if (t.desde == m1 && t.simbolo == simbolo) {
-                    destino1 = t.hacia;
-                }
-                if (t.desde == m2 && t.simbolo == simbolo) {
-                    destino2 = t.hacia;
-                }
-            }
+            for (char simbolo : a.getAlfabeto()) {
+                Estado destino1 = null;
+                Estado destino2 = null;
 
-            if (destino1 != null && destino2 != null) {
-                boolean d1Final = a.getFinales().contains(destino1);
-                boolean d2Final = a.getFinales().contains(destino2);
-
-                String formato = "";
-                if (destino1 == destino2) {
-                    formato = destino1 + " = " + destino2;
-                } else {
-                    formato = destino1 + " - " + destino2;
+                for (Transicion t : a.getTransiciones()) {
+                    if (t.desde == e1 && t.simbolo == simbolo) destino1 = t.hacia;
+                    if (t.desde == e2 && t.simbolo == simbolo) destino2 = t.hacia;
                 }
 
-                if (d1Final == d2Final) {
-                    // agregar nuevos pares derivados si no estan ya
-                    if (!m1m2.contains(destino1 + " - " + destino2) && destino1 != destino2) {
-                        m1m2.add(destino1 + " - " + destino2);
+                if (destino1 != null && destino2 != null) {
+                    boolean d1Final = a.getFinales().contains(destino1);
+                    boolean d2Final = a.getFinales().contains(destino2);
+
+                    String formato = (destino1 == destino2) 
+                        ? destino1 + " = " + destino2 
+                        : destino1 + " - " + destino2;
+
+                    if (d1Final == d2Final) {
+                        Simbolos_Estado nuevoPar = new Simbolos_Estado(destino1, destino2);
+                        if (!origen.contains(nuevoPar) && destino1 != destino2) {
+                            origen.add(nuevoPar);
+                            pendientes.add(nuevoPar);
+                            m1m2.add(destino1 + " - " + destino2);
+                        }
+                        if (simbolo == '0') trans0.add(formato);
+                        if (simbolo == '1') trans1.add(formato);
+                    } else {
+                        compatibleFinal = false;
+                        if (d1Final && !d2Final) {
+                            detalleIncompatibilidad = "El estado " + destino1 + " es final y " + destino2 + " no lo es";
+                        } else if (!d1Final && d2Final) {
+                            detalleIncompatibilidad = "El estado " + destino2 + " es final y " + destino1 + " no lo es";
+                        }
+                        if (simbolo == '0') trans0.add(formato);
+                        if (simbolo == '1') trans1.add(formato);
+                        // no rompemos el ciclo, seguimos expandiendo para ver toda la traza
                     }
-                    if (simbolo == '0') {
-                        trans0.add(formato);
-                    }
-                    if (simbolo == '1') {
-                        trans1.add(formato);
-                    }
-                } else {
-                    // si uno es final y el otro no, ya no son compatibles
-                    compatibleFinal = false;
-                    if (d1Final && !d2Final) {
-                        detalleIncompatibilidad = "El estado " + destino1 + " es final y " + destino2 + " no lo es";
-                    } else if (!d1Final && d2Final) {
-                        detalleIncompatibilidad = "El estado " + destino2 + " es final y " + destino1 + " no lo es";
-                    }
-                    if (simbolo == '0') {
-                        trans0.add(formato);
-                    }
-                    if (simbolo == '1') {
-                        trans1.add(formato);
-                    }
-                    break;
                 }
             }
         }
 
-        // impresion de la tabla
+        // impresión de la tabla
         System.out.println("\nComparando par: " + m1 + " - " + m2);
 
         System.out.println("\n   M1 - M2");
@@ -159,7 +152,6 @@ public class Minimizacion {
     private void eliminarEstado(Estado eliminar, Estado compatible) {
         ArrayList<Transicion> nuevasTransiciones = new ArrayList<>();
 
-        // redirigir transiciones que iban al estado eliminado
         for (Transicion t : a.getTransiciones()) {
             if (t.hacia == eliminar) {
                 nuevasTransiciones.add(new Transicion(t.desde, t.simbolo, compatible));
@@ -168,12 +160,10 @@ public class Minimizacion {
             }
         }
 
-        // actualizar listas del automata
         a.setTransiciones(nuevasTransiciones);
         a.getEstados().remove(eliminar);
         a.getFinales().remove(eliminar);
 
-        // quitar pares que contenian al estado eliminado
         estados_compatibles.removeIf(p -> p.getm1() == eliminar || p.getm2() == eliminar);
 
         System.out.println("Estado " + eliminar + " eliminado. Redirigido hacia " + compatible);
